@@ -11,9 +11,20 @@ The repository contains a ready database, you do not have to create your own dat
 1. Create a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) of this repository
 2. Clone your forked repository onto your computer
 3. Make sure you have Python 3.11 installed
+
+```shell
+# Set up .venv
+python -m pip install virtualenv  # python3 -m pip install virtualenv
+python -m virtualenv .venv
+
+.venv\Scripts\activate  # source .venv/bin/activate (for Linux CLI)
+  deactivate
+pip install -r requirements.txt  # pip install <lib>; pip freeze > requirements.txt
+```
+
 4. Install dependencies by running `pip install -r requirements.txt`
-5. Start the server by running `pyhon ./app.py`
-6. The web application will be available at http://127.0.0.1:8080. 
+5. Start the server by running `python ./app.py`
+6. The web application will be available at http://127.0.0.1:8080.
 7. The admin interface is at http://127.0.0.1:8080/admin, available only to the Admin user (username: admin, pw: admin)
 8. Make sure your fork is public, and add its URL to your coursework report template in the designated field.
 
@@ -30,4 +41,3 @@ docker run -d -p 8000:5000 \
     -v $(pwd)/database.sqlite:/python-docker/database.sqlite \
     mini-social
 ```
- 
