@@ -869,7 +869,7 @@ def loop_color(user_id):
 
 # ----- Functions to be implemented are below
 
-# Task 3.1
+# Task 3.3
 def recommend(user_id, filter_following):
     """
     Args:
@@ -892,7 +892,8 @@ def recommend(user_id, filter_following):
 
     recommended_posts = {} 
 
-    return recommended_posts;
+    return recommended_posts
+
 
 # Task 3.2
 def user_risk_analysis(user_id):
@@ -911,10 +912,20 @@ def user_risk_analysis(user_id):
     
     score = 0
 
-    return score;
+    user_posts = query_db('SELECT content FROM posts WHERE user_id = ?', (user_id,))
+    for post in user_posts:
+        _, post_risk_score = moderate_content(post['content'])
+        score += post_risk_score
+            
+    user_comments = query_db('SELECT content FROM comments WHERE user_id = ?', (user_id,))
+    for comment in user_comments:
+        _, comment_risk_score = moderate_content(comment['content'])
+        score += comment_risk_score
+
+    return score
 
     
-# Task 3.3
+# Task 3.1
 def moderate_content(content):
     """
     Args
@@ -939,7 +950,6 @@ def moderate_content(content):
     # print('1111111111', TIER1_WORDS)
     # print('2222222222222222222', TIER2_PHRASES)
     # print('333333333333333333333333333333333333333', TIER3_WORDS)
-
 
     # ========================================
     # Stage 1.1: Severe Violation Checks
@@ -980,6 +990,7 @@ def moderate_content(content):
         if upper_alpha_chars_quantity / alpha_chars_quantity > 0.7:
             score += 0.5
 
+    # "Rule 2.1: Post & Comment Risk Score" was already done in admin_dashboard method
 
     return moderated_content, score
 
