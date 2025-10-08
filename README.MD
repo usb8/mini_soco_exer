@@ -6,6 +6,11 @@ The codebase contains three missing implementations, which you find [at end of a
 
 The repository contains a ready database, you do not have to create your own data.
 
+## Demo
+
+- Rules: https://mini-social.szab.eu/rules
+- Home: https://mini-social.szab.eu/
+
 ## Usage (for students)
 
 1. Create a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) of this repository

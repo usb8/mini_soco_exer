@@ -922,7 +922,8 @@ def moderate_content(content):
         
     Returns: 
         A tuple containing the moderated content (string) and a severity score (float). There are no strict rules or bounds to the severity score, other than that a score of less than 1.0 means no risk, 1.0 to 3.0 is low risk, 3.0 to 5.0 is medium risk and above 5.0 is high risk.
-    
+        Rules: https://mini-social.szab.eu/rules
+        
     This function moderates a string of content and calculates a severity score based on
     rules loaded from the 'censorship.dat' file. These are already loaded as TIER1_WORDS, TIER2_PHRASES and TIER3_WORDS. Tier 1 corresponds to strong profanity, Tier 2 to scam/spam phrases and Tier 3 to mild profanity.
     
@@ -935,6 +936,51 @@ def moderate_content(content):
     moderated_content = content
     score = 0
     
+    # print('1111111111', TIER1_WORDS)
+    # print('2222222222222222222', TIER2_PHRASES)
+    # print('333333333333333333333333333333333333333', TIER3_WORDS)
+
+
+    # ========================================
+    # Stage 1.1: Severe Violation Checks
+    # ========================================
+    # Rule 1.1.1 (Tier 1 Words) --------------
+    TIER1_PATTERN = r'\b(' + '|'.join(TIER1_WORDS) + r')\b'
+    if re.search(TIER1_PATTERN, moderated_content, flags=re.IGNORECASE):
+        return '[content removed due to severe violation]', 5.0
+
+    # Rule 1.1.2 (Tier 2 Phrases) ------------
+    for phrase in TIER2_PHRASES:
+        if re.search(re.escape(phrase), moderated_content, flags=re.IGNORECASE):
+            return '[content removed due to spam/scam policy]', 5.0
+
+    # ========================================
+    # Stage 1.2: Scored Violations & Filtering
+    # ========================================
+    # Rule 1.2.1 (Tier 3 Words) --------------
+    TIER3_PATTERN = r'\b(' + '|'.join(TIER3_WORDS) + r')\b'  # Define a regex pattern that matches any whole word in the content that is on the tier 3 list
+    tier3_matches = re.findall(TIER3_PATTERN, moderated_content, flags=re.IGNORECASE)  # Run the regex to find all the matching words
+
+    score += len(tier3_matches) * 2.0
+    moderated_content = re.sub(TIER3_PATTERN, lambda m: '*' * len(m.group(0)), moderated_content, flags=re.IGNORECASE)  # Using the same regex, we replace all words with *
+
+    # Rule 1.2.2 (External Links) ------------
+    URL_PATTERN = r'(https?://\S+|www\.\S+)'  # matches http(s)://... or www.... without spaces (. is meta-character, \S is non-space character class)
+    # Other better candidates: https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
+    url_matches = re.findall(URL_PATTERN, moderated_content, flags=re.IGNORECASE)
+    score += len(url_matches) * 2.0
+    moderated_content = re.sub(URL_PATTERN, '[link removed]', moderated_content, flags=re.IGNORECASE)
+
+    # Rule 1.2.3 (Excessive Capitalization)---
+    alpha_chars = [char for char in moderated_content if char.isalpha()]
+    alpha_chars_quantity = len(alpha_chars)
+    if alpha_chars_quantity > 15:
+        upper_alpha_chars = [char for char in alpha_chars if char.isupper()]
+        upper_alpha_chars_quantity = len(upper_alpha_chars)
+        if upper_alpha_chars_quantity / alpha_chars_quantity > 0.7:
+            score += 0.5
+
+
     return moderated_content, score
 
 
