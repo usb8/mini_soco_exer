@@ -910,21 +910,48 @@ def user_risk_analysis(user_id):
         Then, navigate to the /admin endpoint. (http://localhost:8080/admin)
     """
     
-    score = 0
+    user_risk_score = 0.0
 
+    # Step 1 (Profile Score) -------------------
+    user = query_db('SELECT profile, created_at FROM users WHERE id = ?', (user_id,), one=True)
+    # print(user)
+    if not user: return 0.0  # For incoming features, e.g., if the app has search user feature
+    user_profile_text = user['profile'] or ''
+    _, profile_score = moderate_content(user_profile_text)
+
+    # Step 2 (Post Score) ----------------------
     user_posts = query_db('SELECT content FROM posts WHERE user_id = ?', (user_id,))
+    post_scores = []
     for post in user_posts:
-        _, post_risk_score = moderate_content(post['content'])
-        score += post_risk_score
-            
+        _, post_score = moderate_content(post['content'])
+        post_scores.append(post_score)
+    average_post_score = sum(post_scores)/len(post_scores) if post_scores else 0.0
+
+    # Step 3 (Comment Score) --------------------
     user_comments = query_db('SELECT content FROM comments WHERE user_id = ?', (user_id,))
+    comment_scores = []
     for comment in user_comments:
-        _, comment_risk_score = moderate_content(comment['content'])
-        score += comment_risk_score
+        _, comment_score = moderate_content(comment['content'])
+        comment_scores.append(comment_score)
+    average_comment_score = sum(comment_scores)/len(comment_scores) if comment_scores else 0.0
 
-    return score
+    # Step 4 (Combine Scores) -------------------
+    content_risk_score = (profile_score * 1) + (average_post_score * 3) + (average_comment_score * 1)
 
-    
+    # Step 5 (Apply Age Multiplier) -------------
+    account_age_days = (datetime.utcnow() - user['created_at']).days  # created_at is DEFAULT CURRENT_TIMESTAMP, no need to check null if Database is set up correctly, and enough security checks are in place
+    if account_age_days < 7:
+        user_risk_score = content_risk_score * 1.5
+    elif account_age_days < 30:
+        user_risk_score = content_risk_score * 1.2
+    else:
+        user_risk_score = content_risk_score
+
+    # Step 6 (Final Capping) --------------------
+    user_risk_score = min(user_risk_score, 5.0)
+    return user_risk_score
+
+
 # Task 3.1
 def moderate_content(content):
     """
