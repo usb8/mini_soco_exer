@@ -934,7 +934,7 @@ def recommend(user_id, filter_following):
         for word in words:
             if word not in stop_words and len(word) > 2:
                 word_counts[word] += 1
-    # Get the top 10 most common keywords
+    # Get the top 10 most common keywords (already lowercased)
     top_keywords = [word for word, _ in word_counts.most_common(10)]
     # top_keywords = [word for word, _ in word_counts.most_common(100)]
     # print('$$$$$$$$$$$$$$$$$$$$$$', top_keywords)
@@ -942,16 +942,17 @@ def recommend(user_id, filter_following):
     # 5. Filter recommended posts
     recommended_posts = []
     liked_post_ids = {post['id'] for post in query_db('SELECT post_id as id FROM reactions WHERE user_id = ?', (user_id,))}
-    for post in all_other_posts:
-        # Skip posts already liked or by the user themselves
-        if post['id'] in liked_post_ids or post['user_id'] == user_id:
-            continue
-        # Only recommend posts containing relevant keywords
-        if any(keyword in post['content'].lower() for keyword in top_keywords):
-            recommended_posts.append(post)
+    for keyword in top_keywords:
+        for post in all_other_posts:
+            # Skip posts already liked, or created by the user themselves; or already added / duplicated by spammers
+            if post['id'] in liked_post_ids or post['user_id'] == user_id or post['id'] in recommended_posts:
+                continue
+            # Only recommend posts containing relevant keywords
+            if keyword in post['content'].lower():
+                recommended_posts.append(post)
 
     # 6. Sort by newest and return the top 5
-    recommended_posts.sort(key=lambda p: p['created_at'], reverse=True)
+    # recommended_posts.sort(key=lambda p: p['created_at'], reverse=True)
     # return recommended_posts
     return recommended_posts[:5]
 
