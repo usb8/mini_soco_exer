@@ -720,6 +720,11 @@ def admin_dashboard():
         all_users.append(user_dict)
 
     all_users.sort(key=lambda x: x['risk_score'], reverse=True)
+    # Identify the top 5 highest risk users
+    print('======================================')
+    print('Top 5 highest risk users:')
+    print(all_users[:5])
+    print('======================================')
     total_users = len(all_users)
     users = all_users[users_offset : users_offset + PAGE_SIZE]
     total_users_pages = (total_users + PAGE_SIZE - 1) // PAGE_SIZE
@@ -985,8 +990,17 @@ def user_risk_analysis(user_id):
         comment_scores.append(comment_score)
     average_comment_score = sum(comment_scores)/len(comment_scores) if comment_scores else 0.0
 
+    # Step 2+3 (Spammer Check) -------------------
+    # print(user_posts[0]['content'])
+    _posts = [user_post['content'] for user_post in user_posts]
+    _comments = [user_comment['content'] for user_comment in user_comments]
+    # print(_posts[0])
+    duplicates = (len(_posts) - len(set(_posts))) + (len(_comments) - len(set(_comments)))
+    spammer_score = duplicates * 0.5
+    # print(spammer_score)
+
     # Step 4 (Combine Scores) -------------------
-    content_risk_score = (profile_score * 1) + (average_post_score * 3) + (average_comment_score * 1)
+    content_risk_score = (profile_score * 1) + (average_post_score * 3) + (average_comment_score * 1) + (spammer_score * 1)
 
     # Step 5 (Apply Age Multiplier) -------------
     account_age_days = (datetime.utcnow() - user['created_at']).days  # created_at is DEFAULT CURRENT_TIMESTAMP, no need to check null if Database is set up correctly, and enough security checks are in place
