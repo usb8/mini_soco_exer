@@ -1052,13 +1052,13 @@ def moderate_content(content):
     moderated_content = re.sub(TIER3_PATTERN, lambda m: '*' * len(m.group(0)), moderated_content, flags=re.IGNORECASE)  # Using the same regex, we replace all words with *
 
     # Rule 1.2.2 (External Links) ------------
-    URL_PATTERN = r'(https?://\S+|www\.\S+)'  # matches http(s)://... or www.... without spaces (. is meta-character, \S is non-space character class)
+    URL_PATTERN = r'\b(https?://\S+|www\.\S+)\b'  # matches http(s)://... or www.... without spaces (. is meta-character, \S is non-space character class)
     # Other better candidates: https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
     url_matches = re.findall(URL_PATTERN, moderated_content, flags=re.IGNORECASE)
     score += len(url_matches) * 2.0
     moderated_content = re.sub(URL_PATTERN, '[link removed]', moderated_content, flags=re.IGNORECASE)
 
-    # Rule 1.2.3 (Excessive Capitalization)---
+    # Rule 1.2.3 (Excessive Capitalization) --
     alpha_chars = [char for char in moderated_content if char.isalpha()]
     alpha_chars_quantity = len(alpha_chars)
     if alpha_chars_quantity > 15:
@@ -1067,7 +1067,13 @@ def moderate_content(content):
         if upper_alpha_chars_quantity / alpha_chars_quantity > 0.7:
             score += 0.5
 
-    # "Rule 2.1: Post & Comment Risk Score" was already done in admin_dashboard method
+    # "Rule 2.1: Post & Comment Risk Score" was already done in admin_dashboard method ---
+
+    # New rule (Personal info such as phone number) ---
+    PERSONAL_INFO_PATTERN = r'\b\d{10}\b'  # Simple pattern for a 10-digit phone number
+    personal_info_matches = re.findall(PERSONAL_INFO_PATTERN, moderated_content)
+    score += len(personal_info_matches) * 1.0
+    moderated_content = re.sub(PERSONAL_INFO_PATTERN, '[personal info removed]', moderated_content)
 
     return moderated_content, score
 
