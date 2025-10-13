@@ -912,10 +912,22 @@ def recommend(user_id, filter_following):
             WHERE p.user_id != ? ORDER BY p.created_at DESC LIMIT 5
         ''', (user_id,))
 
-    # 3. Find the common keywords from the posts user liked
+    # 3. Get all other posts (optionally filter by followed users)
+    query = "SELECT p.id, p.content, p.created_at, u.username, u.id as user_id FROM posts p JOIN users u ON p.user_id = u.id"
+    params = []
+    # If filtering by following, add a WHERE clause to only include followed users.
+    if filter_following:
+        query += " WHERE p.user_id IN (SELECT followed_id FROM follows WHERE follower_id = ?)"
+        params.append(user_id)
+    all_other_posts = query_db(query, tuple(params))
+    # my_keywords = ['diy']
+    # posts_containing_my_keywords = [post for post in all_other_posts if any(keyword in post['content'].lower() for keyword in my_keywords)]
+    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', len([post['content'] for post in posts_containing_my_keywords]))
+
+    # 4. Find the common keywords from the posts user liked
     word_counts = collections.Counter()
     # A simple set of common words to ignore TODO: This can be improved with a more comprehensive stop words list or library
-    stop_words = {'a', 'an', 'the', 'in', 'on', 'is', 'it', 'to', 'for', 'of', 'and', 'with'}
+    stop_words = {'a', 'an', 'the', 'in', 'on', 'is', 'it', 'to', 'for', 'of', 'and', 'with', 'just', 'time', 'will', 'let', 'than', 'session', 'say', 'tell', 'more', 'afternoon', 'abstract'}
     for post in liked_posts_content:
         # Use regex to find all words in the post content
         words = re.findall(r'\b\w+\b', post['content'].lower())
@@ -924,16 +936,9 @@ def recommend(user_id, filter_following):
                 word_counts[word] += 1
     # Get the top 10 most common keywords
     top_keywords = [word for word, _ in word_counts.most_common(10)]
+    # top_keywords = [word for word, _ in word_counts.most_common(100)]
+    # print('$$$$$$$$$$$$$$$$$$$$$$', top_keywords)
 
-    # 4. Get all other posts (optionally filter by followed users)
-    query = "SELECT p.id, p.content, p.created_at, u.username, u.id as user_id FROM posts p JOIN users u ON p.user_id = u.id"
-    params = []
-    # If filtering by following, add a WHERE clause to only include followed users.
-    if filter_following:
-        query += " WHERE p.user_id IN (SELECT followed_id FROM follows WHERE follower_id = ?)"
-        params.append(user_id)
-    all_other_posts = query_db(query, tuple(params))
-    
     # 5. Filter recommended posts
     recommended_posts = []
     liked_post_ids = {post['id'] for post in query_db('SELECT post_id as id FROM reactions WHERE user_id = ?', (user_id,))}
@@ -947,6 +952,7 @@ def recommend(user_id, filter_following):
 
     # 6. Sort by newest and return the top 5
     recommended_posts.sort(key=lambda p: p['created_at'], reverse=True)
+    # return recommended_posts
     return recommended_posts[:5]
 
 
