@@ -8,12 +8,27 @@ from nltk.stem import WordNetLemmatizer
 import nltk
 from collections import Counter
 import sqlite3
+from nltk.downloader import Downloader
 
 def main():
     # Download necessary NLTK data, without these the below functions wouldn't work
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    nltk.download('wordnet')
+    # nltk.download('punkt')
+    # nltk.download('stopwords')
+    # nltk.download('wordnet')
+    resources = {
+      'punkt': 'tokenizers/punkt',
+      'stopwords': 'corpora/stopwords',
+      'wordnet': 'corpora/wordnet',
+    }
+    d = Downloader()
+    missing = [pkg for pkg in resources.keys() if not d.is_installed(pkg)]
+    if missing:
+        print("Missing NLTK resources (will download):", missing)
+        for pkg in missing:
+            d.download(pkg, quiet=True)
+        print("Downloaded missing NLTK resources.")
+    else:
+        print("All required NLTK resources are already installed.")
 
     def get_wordnet_pos(tag):
         if tag.startswith('N'):
