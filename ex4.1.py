@@ -43,13 +43,14 @@ def main():
     stop_words = stopwords.words('english')
 
     # 1.b. Add extra Stopwords (impact LDA).
-    stop_words.extend(['would', 'best', 'always', 'amazing', 'bought', 'quick', 'people', 'new', 'fun', 'think', 'know', 'believe', 'many', 'thing', 'need', 'small', 'even', 'make', 'love', 'mean', 'fact', 'question', 'time', 'reason', 'also', 'could', 'true', 'well',  'life', 'said', 'year', 'going', 'good', 'really', 'much', 'want', 'back', 'look', 'article', 'host', 'university', 'reply', 'thanks', 'mail', 'post', 'please'])
+    stop_words.extend(['would', 'good', 'always', 'amazing', 'buy', 'quick', 'people', 'new', 'fun', 'think', 'know', 'believe', 'many', 'thing', 'need', 'small', 'even', 'make', 'love', 'mean', 'fact', 'question', 'time', 'reason', 'also', 'could', 'true', 'well',  'life', 'said', 'year', 'going', 'good', 'really', 'much', 'want', 'back', 'look', 'article', 'host', 'university', 'reply', 'thanks', 'mail', 'post', 'please'])
     
     # stop_words.extend(['anyone', 'someone', 'every', 'one', 'one', 'get', 'use', 'try', 'way', 'today', 'sure', 'sometimes', 'together', 'right'])  # From Zipf's law 1d and the results of LDA's topics
     # Consider: 'first', 'highly', 'made', 'went', 'saw', 'stay', 'help', 'meet', 'learned', 'learns', 'tried', 'trying', 'considering', 'buying' -> 'learned', 'learns', 'tried', 'trying': something wrong with lemmatisation!!! -> Let fix it
-    
-    stop_words.extend(['anyone', 'someone', 'one', 'every', 'show', 'saw','stay', 'help', 'way', 'first', 'today', 'sometimes', 'together', 'right', 'day'])  # From Zipf's law 1d and the results of LDA's topics, after fix lemmatisation
-    # Consider: 'try', 'buy', 'learn', 'take', 'run', 'move', 'understand', 'show', 'train', 'consider', 'improve', 'keep', 'maintain', 'explore', 'recommend', 'get', 'use', 'sure', , 'highly', 'home', , 'thought', 'regularly', 'rapidly', 'tip'
+
+    # From Zipf's law 1d and the results of LDA's topics, after fix lemmatisation
+    stop_words.extend(['attend', 'watch', 'spend', 'listen' , 'discover', 'night', 'weekend','like', 'feel', 'get', 'try', 'finish', 'see', 'wait', 'change', 'find', 'take', 'read', 'let', 'never', 'keep', 'come', 'learn', 'give', 'run', 'bring', 'enter', 'hit', 'talk', 'say', 'turn', 'push', 'open', 'lose', 'visit', 'miss', 'finally', 'else', 'still', 'truly', 'nothing', 'next', 'actually', 'damn', 'shit', 'fuck', 'seriously', 'tonight', 'bit', 'everything', 'another', 'something', 'home', 'day', 'morning', 'hour', 'first', 'last', 'next', 'today', 'everyone', 'tip', 'way', 'little', 'hard', 'real', 'perfect', 'great', 'worth'])
+    stop_words = set(stop_words)
 
     # 1.c. Tokenisation, lemmatisation and filtering pipeline``
     lemmatizer = WordNetLemmatizer()
@@ -88,8 +89,9 @@ def main():
     #    coherence using c_v is a common automatic metric for topic quality.
     best_coherence_score = -100
     best_lda_model = None
+    lda_model_k_10 = None
     best_num_topics = 0
-    for K in range(2, 10):
+    for K in range(2, 11):
         # Train an LDA model (impact LDA) with:
         #   K topics
         #   the algorithm will iterate over the corpus 10 times (larger number -> slower but can help convergence).
@@ -107,12 +109,21 @@ def main():
             best_num_topics = K
         else: 
             print(f'Trained LDA with {K} topics. Average topic coherence (higher is better): {coherence_score} which is not very good.')
+        
+        if K == 10:
+            lda_model_k_10 = lda_model
 
     # 4. Show topics of the chosen model
     # Print top 5 most representative words per topic
     print(f'These are the words most representative of each of the {best_num_topics} topics:')
     for i, topic in best_lda_model.print_topics(num_words=5):
         print(f"Topic {i}: {topic}")
+
+    print('For ex.4.1======================================')
+    print('These are the topics of the LDA model with K=10:')
+    for i, topic in lda_model_k_10.print_topics(num_words=5):
+        print(f"Topic {i}: {topic}")
+    print('================================================')
 
     # 5. Count dominant topic per document
     # Count the dominant topic for each document
