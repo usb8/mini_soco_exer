@@ -2,16 +2,28 @@ import pandas as pd
 from gensim.corpora import Dictionary
 from gensim.models.ldamodel import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import nltk
+from collections import Counter
 
 def main():
     # Download necessary NLTK data, without these the below functions wouldn't work
     nltk.download('punkt')
     nltk.download('stopwords')
     nltk.download('wordnet')
+
+    def get_wordnet_pos(tag):
+        if tag.startswith('N'):
+            return wordnet.NOUN
+        if tag.startswith('V'):
+            return wordnet.VERB
+        if tag.startswith('J'):
+            return wordnet.ADJ
+        if tag.startswith('R'):
+            return wordnet.ADV
+        return wordnet.NOUN  # or None
 
     # Load dataset
     data = pd.read_csv("./test/posts.csv")
@@ -20,19 +32,35 @@ def main():
     stop_words = stopwords.words('english')
 
     # 1.b. Add extra Stopwords (impact LDA).
-    stop_words.extend(['would', 'best', 'always', 'amazing', 'bought', 'quick' 'people', 'new', 'fun', 'think', 'know', 'believe', 'many', 'thing', 'need', 'small', 'even', 'make', 'love', 'mean', 'fact', 'question', 'time', 'reason', 'also', 'could', 'true', 'well',  'life', 'said', 'year', 'going', 'good', 'really', 'much', 'want', 'back', 'look', 'article', 'host', 'university', 'reply', 'thanks', 'mail', 'post', 'please'])
+    stop_words.extend(['would', 'best', 'always', 'amazing', 'bought', 'quick', 'people', 'new', 'fun', 'think', 'know', 'believe', 'many', 'thing', 'need', 'small', 'even', 'make', 'love', 'mean', 'fact', 'question', 'time', 'reason', 'also', 'could', 'true', 'well',  'life', 'said', 'year', 'going', 'good', 'really', 'much', 'want', 'back', 'look', 'article', 'host', 'university', 'reply', 'thanks', 'mail', 'post', 'please'])
+    
+    # stop_words.extend(['anyone', 'someone', 'every', 'one', 'one', 'get', 'use', 'try', 'way', 'today', 'sure', 'sometimes', 'together', 'right'])  # From Zipf's law 1d and the results of LDA's topics
+    # Consider: 'first', 'highly', 'made', 'went', 'saw', 'stay', 'help', 'meet', 'learned', 'learns', 'tried', 'trying', 'considering', 'buying' -> 'learned', 'learns', 'tried', 'trying': something wrong with lemmatisation!!! -> Let fix it
+    
+    stop_words.extend(['anyone', 'someone', 'one', 'every', 'show', 'saw','stay', 'help', 'way', 'first', 'today', 'sometimes', 'together', 'right', 'day'])  # From Zipf's law 1d and the results of LDA's topics, after fix lemmatisation
+    # Consider: 'try', 'buy', 'learn', 'take', 'run', 'move', 'understand', 'show', 'train', 'consider', 'improve', 'keep', 'maintain', 'explore', 'recommend', 'get', 'use', 'sure', , 'highly', 'home', , 'thought', 'regularly', 'rapidly', 'tip'
 
-    # 1.c. Tokenisation, lemmatisation and filtering pipeline
+    # 1.c. Tokenisation, lemmatisation and filtering pipeline``
     lemmatizer = WordNetLemmatizer()
     bow_list = []  # bag-of-words list  # Type: [['token1_post1', 'token2_post1'], ['token3_post2', 'token4_post2']]
     for _, row in data.iterrows():
         text = row['content']
         tokens = word_tokenize(text.lower())  # tokenise each post
-        tokens = [lemmatizer.lemmatize(t) for t in tokens]  # lemmatise (impact LDA)
+       
+        # Problem without POS: WordNetLemmatizer treats words as nouns by default. Many verbs and adjectives will not be transformed to their base form without knowing the word POS.
+        _tokens_pos_tags = nltk.pos_tag(tokens)
+        # print(_tokens_pos_tags)
+        tokens = [lemmatizer.lemmatize(t, pos=get_wordnet_pos(pos)) for t, pos in _tokens_pos_tags]  # lemmatise (impact LDA)
+        
         tokens = [t for t in tokens if len(t) > 2]  # drop tokens shorter than 3 chars (impact LDA)
         tokens = [t for t in tokens if t.isalpha() and t not in stop_words]  # remove non-alphabetic tokens and stopwords (impact LDA)
         if len(tokens) > 0:
             bow_list.append(tokens)
+
+    # # 1.d. Zipf's Law: Most frequent words are stopwords (e.g., 'the', 'is', 'in', 'and', etc.)
+    # _bow_list = [t for b in bow_list for t in b]
+    # word_freq = Counter(_bow_list)
+    # print(word_freq.most_common(200))  # print the 200 most common words
 
     # 2. Create the gensim dictionary and corpus
     dictionary = Dictionary(bow_list)  # map between words and their integer ids
