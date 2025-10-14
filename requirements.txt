@@ -1,2 +1,6 @@
 flask
 cryptography
+pandas
+gensim
+nltk
+matplotlib
