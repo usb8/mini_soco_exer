@@ -52,6 +52,9 @@ def main():
     posts_query = "SELECT id, content FROM Posts"
     data = pd.read_sql_query(posts_query, conn)
     # print(data.head())
+    # print(len(data))
+    data = data.drop_duplicates(subset=["content"])  # Remove duplicate posts from spammers
+    # print(len(data))
     conn.close()
 
     # 1.a. Stopwords
@@ -80,7 +83,7 @@ def main():
         tokens = [lemmatizer.lemmatize(t, pos=get_wordnet_pos(pos)) for t, pos in _tokens_pos_tags]  # lemmatise (impact LDA)
         
         tokens = [t for t in tokens if len(t) > 2]  # drop tokens shorter than 3 chars (impact LDA)
-        tokens = [t for t in tokens if t.isalpha() and t not in stop_words]  # remove non-alphabetic tokens and stopwords (impact LDA)
+        tokens = [t for t in tokens if t.isalpha() and t not in stop_words]  # remove non-alphabetic tokens such as num, emoji, URLs, mentions, html tags, punctuation and stopwords (impact LDA)
         if len(tokens) > 0:
             bow_list.append(tokens)
 
