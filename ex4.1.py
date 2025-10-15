@@ -9,6 +9,7 @@ import nltk
 from collections import Counter
 import sqlite3
 from nltk.downloader import Downloader
+import contractions
 
 def main():
     # Download necessary NLTK data, without these the below functions wouldn't work
@@ -74,7 +75,8 @@ def main():
     lemmatizer = WordNetLemmatizer()
     bow_list = []  # bag-of-words list  # Type: [['token1_post1', 'token2_post1'], ['token3_post2', 'token4_post2']]
     for _, row in data.iterrows():
-        text = row['content']
+        # text = row['content']
+        text = contractions.fix(row['content'])
         tokens = word_tokenize(text.lower())  # tokenise each post
        
         # Problem without POS: WordNetLemmatizer treats words as nouns by default. Many verbs and adjectives will not be transformed to their base form without knowing the word POS.

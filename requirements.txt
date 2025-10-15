@@ -4,3 +4,4 @@ pandas
 gensim
 nltk
 matplotlib
+contractions
