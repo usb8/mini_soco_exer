@@ -1073,7 +1073,7 @@ def moderate_content(content):
     moderated_content = re.sub(TIER3_PATTERN, lambda m: '*' * len(m.group(0)), moderated_content, flags=re.IGNORECASE)  # Using the same regex, we replace all words with *
 
     # Rule 1.2.2 (External Links) ------------
-    URL_PATTERN = r'\b(https?://\S+|www\.\S+)\b'  # matches http(s)://... or www.... without spaces (. is meta-character, \S is non-space character class)
+    URL_PATTERN = r'\b(https?://\S+|www\.\S+)|[a-z0-9-]+(\.|\[\.\])[a-z]{2,4}/?[a-z0-9-]*\b'  # matches http(s)://... or www.... without spaces (. is meta-character, \S is non-space character class)
     # Other better candidates: https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
     url_matches = re.findall(URL_PATTERN, moderated_content, flags=re.IGNORECASE)
     score += len(url_matches) * 2.0
@@ -1091,7 +1091,7 @@ def moderate_content(content):
     # "Rule 2.1: Post & Comment Risk Score" was already done in admin_dashboard method ---
 
     # New rule (Personal info such as phone number) ---
-    PERSONAL_INFO_PATTERN = r'\b\d{10}\b'  # Simple pattern for a 10-digit phone number
+    PERSONAL_INFO_PATTERN = r'\b(\d{3})?-?\d{3}-?\d{4}\b'  # Simple pattern for a 10-digit phone number 123-456-7890 or 1234567890 or 123-4567 or 1234567
     personal_info_matches = re.findall(PERSONAL_INFO_PATTERN, moderated_content)
     score += len(personal_info_matches) * 1.0
     moderated_content = re.sub(PERSONAL_INFO_PATTERN, '[personal info removed]', moderated_content)
