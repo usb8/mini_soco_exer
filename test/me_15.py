@@ -1,9 +1,8 @@
 """
-Using Valence Aware Dictionary and sEntiment Reasoner (VADER), determine the highest and lowest rated
-Delifrance locations across the US based on the given review dataset reviews.csv [1]. First, follow along
-the NLTK library’s documentation[2] to set up a basic workflow. Then, improve your classification by
-adding custom stopwords, removing short words and lemmatisation. Bonus: Plot the yearly average
-sentiment and determine the year with the best average review sentiment.
+Using Valence Aware Dictionary and sEntiment Reasoner (VADER), determine the highest and lowest rated Delifrance locations across the US based on the given review dataset reviews.csv [1].
+- First, follow along the NLTK library’s documentation[2] to set up a basic workflow.
+- Then, improve your classification by adding custom stopwords, removing short words and lemmatisation.
+- Bonus: Plot the yearly average sentiment and determine the year with the best average review sentiment.
 """
 
 import pandas as pd
@@ -13,6 +12,7 @@ import matplotlib.pyplot as plt
 
 # Download VADER lexicon required for SentimentIntensityAnalyzer
 nltk.download('vader_lexicon')
+
 
 df = pd.read_csv('./test/reviews.csv')
 
