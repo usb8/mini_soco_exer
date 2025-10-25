@@ -13,6 +13,7 @@ import contractions
 from cryptography.fernet import Fernet
 import json
 import re
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 def main():
@@ -24,6 +25,7 @@ def main():
       'punkt': 'tokenizers/punkt',
       'stopwords': 'corpora/stopwords',
       'wordnet': 'corpora/wordnet',
+      'vader_lexicon': 'sentiment/vader_lexicon'
     }
     d = Downloader()
     missing = [pkg for pkg in resources.keys() if not d.is_installed(pkg)]
@@ -215,6 +217,27 @@ def main():
     for i, count in enumerate(topic_counts):
         print(f"Topic {i}: {count} posts")
 
+    # -----------------------------------------------
+    # 6. Sentiment Analysis by Topic
+    # -----------------------------------------------
+    print("\n\n====== Sentiment Analysis by Topic ======")
+    sia = SentimentIntensityAnalyzer()
+    # Compute compound sentiment score for posts
+    data['sentiment_score'] = data['content'].apply(lambda text: sia.polarity_scores(text)['compound'])
+
+    # Add dominant topic to df
+    topic_list = []  # list of dominant topics per post
+    for bow in corpus:
+        topic_dist = lda_model_k_10.get_document_topics(bow)  # list of (topic_id, probability)
+        dominant_topic = max(topic_dist, key=lambda x: x[1])[0]  # find the top probability
+        topic_list.append(dominant_topic)
+    data['topic'] = topic_list
+    
+    # Aggregate: count and mean sentiment score by topic
+    print("--- Sentiment Statistics by Topic ---")
+    topic_stats = data.groupby('topic')['sentiment_score'].agg(['count', 'mean'])
+    sorted_topic_stats = topic_stats.sort_values(by='mean', ascending=False)  # sort by mean (highest first)
+    print(sorted_topic_stats)
 
 if __name__ == '__main__':
     main()
