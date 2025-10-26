@@ -201,6 +201,12 @@ def feed():
                            reaction_emojis=REACTION_EMOJIS,
                            reaction_types=REACTION_TYPES)
 
+@app.route('/posts/<int:post_id>/report_post', methods=['POST'])
+def report_post(post_id):
+    flash('Reported!', 'warning')
+    return redirect(url_for('post_detail', post_id=post_id))
+
+
 @app.route('/posts/new', methods=['POST'])
 def add_post():
     """Handles creating a new post from the feed."""
