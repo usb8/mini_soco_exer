@@ -137,5 +137,20 @@ def main():
     comments_tone_stats = comments_tone_stats[['count', 'percent %', 'mean', 'std', 'min', 'max']]
     print(comments_tone_stats.sort_values(by='count', ascending=False))  # Sort by count (highest first)
 
+    # Visualization
+    # Posts tone distribution (pie chart from count values)
+    plt.figure(figsize=(8, 6))
+    posts_tone_counts = posts['overall_tone'].value_counts()
+    plt.pie(posts_tone_counts, labels=posts_tone_counts.index, autopct='%1.2f%%', startangle=90)
+    plt.title('Posts Tone Distribution', fontsize=14, fontweight='bold')
+    plt.show()
+    
+    # Comments tone distribution (pie chart from count values)
+    plt.figure(figsize=(8, 6))
+    comments_tone_counts = comments['overall_tone'].value_counts()
+    plt.pie(comments_tone_counts, labels=comments_tone_counts.index, autopct='%1.2f%%', startangle=90)
+    plt.title('Comments Tone Distribution', fontsize=14, fontweight='bold')
+    plt.show()
+    
 if __name__ == '__main__':
     main()
