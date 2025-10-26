@@ -109,6 +109,7 @@
                         <th>Created At</th>
                         <th>Risk Level</th>
                         <th>Actions</th>
+                        <th>Reports</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -135,6 +136,7 @@
                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                             </form>
                         </td>
+                        <td>{{ post.report_count }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

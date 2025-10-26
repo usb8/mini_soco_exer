@@ -777,12 +777,33 @@ def admin_dashboard():
     total_posts_count = query_db('SELECT COUNT(*) as count FROM posts', one=True)['count']
     total_posts_pages = (total_posts_count + PAGE_SIZE - 1) // PAGE_SIZE
 
+    # posts_raw = query_db(f'''
+    #     SELECT p.id, p.content, p.created_at, u.username, u.created_at as user_created_at
+    #     FROM posts p JOIN users u ON p.user_id = u.id
+    #     ORDER BY p.id DESC -- Order by ID for consistent pagination before risk sort
+    #     LIMIT ? OFFSET ?
+    # ''', (PAGE_SIZE, posts_offset))
     posts_raw = query_db(f'''
-        SELECT p.id, p.content, p.created_at, u.username, u.created_at as user_created_at
-        FROM posts p JOIN users u ON p.user_id = u.id
-        ORDER BY p.id DESC -- Order by ID for consistent pagination before risk sort
-        LIMIT ? OFFSET ?
+      SELECT 
+          p.id, 
+          p.content, 
+          p.created_at, 
+          u.username, 
+          u.created_at as user_created_at,
+          COUNT(pr.id) as report_count 
+      FROM 
+          posts p 
+      JOIN 
+          users u ON p.user_id = u.id
+      LEFT JOIN 
+          post_reports pr ON p.id = pr.post_id
+      GROUP BY 
+          p.id
+      ORDER BY 
+          p.id DESC
+      LIMIT ? OFFSET ?
     ''', (PAGE_SIZE, posts_offset))
+
     posts = []
     for post in posts_raw:
         post_dict = dict(post)
