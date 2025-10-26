@@ -1,3 +1,4 @@
+import html
 import pandas as pd
 from gensim.corpora import Dictionary
 from gensim.models.ldamodel import LdaModel
@@ -220,6 +221,28 @@ def main():
     # -----------------------------------------------
     # 6. Sentiment Analysis by Topic
     # -----------------------------------------------
+    # Clean data light (for each post/comment)
+    def clean_text_light(text):  # Resued from ex4.2.py
+        # Remove URLs
+        URL_PATTERN = r'\b(https?://\S+|www\.\S+)|[a-z0-9-]+(\.|\[\.\])[a-z]{2,4}/?[a-z0-9-]*\b'
+        text = re.sub(URL_PATTERN, '', text, flags=re.IGNORECASE)
+
+        # Remove mentions
+        text = re.sub(r'@\w+', '', text)
+
+        # Remove hashtags but keep the text
+        text = re.sub(r'#(\w+)', r'\1', text)
+
+        # Remove HTML tags & decode HTML entities
+        text = re.sub(r'<.*?>', '', text)
+        text = html.unescape(text)
+
+        # Remove extra whitespace
+        text = ' '.join(text.split())
+
+        return text
+    data['content'] = data['content'].apply(clean_text_light)
+
     print("\n\n====== Sentiment Analysis by Topic ======")
     sia = SentimentIntensityAnalyzer()
     # Compute compound sentiment score for posts

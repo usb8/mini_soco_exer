@@ -15,7 +15,7 @@ import json
 import re
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt
-
+import html
 
 def main():
     # Download necessary NLTK data, without these the below functions wouldn't work
@@ -57,10 +57,35 @@ def main():
     posts, comments = load_db()
 
     # 1.2. Cleaning data
+    # 1.2.1. Cleaning data 1 (Remove duplicates from spammers)
     posts = posts.drop_duplicates(subset=["content"])
     print("- Number of posts after removing duplicates:", len(posts))
     comments = comments.drop_duplicates(subset=["content"])
     print("- Number of comments after removing duplicates:", len(comments))
+
+    # 1.2.2. Clean data 2 (for each post/comment)
+    def clean_text_light(text):
+        # Remove URLs
+        URL_PATTERN = r'\b(https?://\S+|www\.\S+)|[a-z0-9-]+(\.|\[\.\])[a-z]{2,4}/?[a-z0-9-]*\b'
+        text = re.sub(URL_PATTERN, '', text, flags=re.IGNORECASE)
+
+        # Remove mentions
+        text = re.sub(r'@\w+', '', text)
+
+        # Remove hashtags but keep the text
+        text = re.sub(r'#(\w+)', r'\1', text)
+
+        # Remove HTML tags & decode HTML entities
+        text = re.sub(r'<.*?>', '', text)
+        text = html.unescape(text)
+
+        # Remove extra whitespace
+        text = ' '.join(text.split())
+
+        return text
+    
+    posts['content'] = posts['content'].apply(clean_text_light)
+    comments['content'] = comments['content'].apply(clean_text_light)
 
     # -----------------------------------------------
     # 2. Sentiment Analysis for posts and comments (VADER - no tokenization needed! - like exercise 15)
