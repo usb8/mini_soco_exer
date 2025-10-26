@@ -22,12 +22,22 @@ The repository contains a ready database, you do not have to create your own dat
 python -m pip install virtualenv  # python3 -m pip install virtualenv
 python -m virtualenv .venv
 
-.venv\Scripts\activate  # source .venv/bin/activate (for Linux CLI)
+.venv\Scripts\activate  # source .venv/bin/activate (for Linux CLI)  # py -3.11 -m venv .venv
   deactivate
 pip install -r requirements.txt  # pip install <lib>; pip freeze > requirements.txt
 ```
 
 4. Install dependencies by running `pip install -r requirements.txt`
+
+- Before running app, need to create a new table for post reports once. You can you add_post_reports.py for convenience
+
+```sql
+CREATE TABLE `post_reports` (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id       INTEGER NOT NULL,
+    reporter_id       INTEGER NOT NULL);
+```
+
 5. Start the server by running `python ./app.py`
 6. The web application will be available at http://127.0.0.1:8080.
 7. The admin interface is at http://127.0.0.1:8080/admin, available only to the Admin user (username: admin, pw: admin)
