@@ -203,8 +203,45 @@ def feed():
 
 @app.route('/posts/<int:post_id>/report_post', methods=['POST'])
 def report_post(post_id):
-    flash('Reported!', 'warning')
-    return redirect(url_for('post_detail', post_id=post_id))
+    # flash('Reported!', 'warning')
+    # return redirect(url_for('post_detail', post_id=post_id))
+
+    """Handles reporting a post."""
+    user_id = session.get('user_id')
+
+    # Block access if user is not logged in
+    if not user_id:
+        flash('You must be logged in to report a post.', 'danger')
+        return redirect(url_for('login'))
+
+    # Find the post in the database
+    post = query_db('SELECT id, user_id FROM posts WHERE id = ?', (post_id,), one=True)
+
+    # Check if the post exists and if the current user is the owner
+    if not post:
+        flash('Post not found.', 'danger')
+        return redirect(url_for('feed'))
+
+    if post['user_id'] == user_id:
+        # Security check: prevent users from reporting their own posts.
+        flash('You do can not report your own post.', 'danger')
+        return redirect(request.referrer)
+    
+    # Check if the user already submitted a report
+    report = query_db('SELECT * FROM post_reports WHERE reporter_id = ? AND post_id = ?', (user_id, post_id,), one=True)
+    if report:
+        flash('You already submitted a report for this post.', 'danger')
+        return redirect(request.referrer)
+
+    # If all checks pass, proceed with report
+    db = get_db()
+    db.execute('INSERT INTO post_reports (post_id, reporter_id) VALUES (?, ?)', (post_id, user_id))
+    db.commit()
+
+    flash('The post was successfully reported.', 'success')
+    
+    # Redirect back to the page the user came from, or the feed as a fallback
+    return redirect(request.referrer or url_for('feed'))
 
 
 @app.route('/posts/new', methods=['POST'])
