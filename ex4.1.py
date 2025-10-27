@@ -59,7 +59,7 @@ def main():
             print("SQLite Database connection successful")
         except Exception as e:
             print(f"Error: '{e}'")
-        posts_query = "SELECT id, content FROM Posts"
+        posts_query = "SELECT id, user_id, content FROM Posts"
         data = pd.read_sql_query(posts_query, conn)
         # print(data.head())
         print("- Number of posts:", len(data))
@@ -68,9 +68,9 @@ def main():
     data = load_db()
 
     # 1.2. Cleaning data
-    # 1.2.1. Cleaning data 1 (Remove duplicate posts from spammers)
-    data = data.drop_duplicates(subset=["content"])
-    print("- Number of posts after removing duplicates:", len(data))
+    # 1.2.1. Cleaning data 1 (Remove duplicate posts from users/spammers)
+    data = data.drop_duplicates(subset=["user_id", "content"])
+    print("- Number of posts after removing duplicates from spammers:", len(data))
 
     # 1.2.2. Clean data 2 for each post
     # def clean_text(text):
@@ -167,9 +167,8 @@ def main():
     # -----------------------------------------------
     best_coherence_score = -100
     best_lda_model = None
-    lda_model_k_10 = None
     best_num_topics = 0
-    for K in range(2, 11):
+    for K in range(10, 25):
         # Train an LDA model (impact LDA) with:
         #   K topics
         #   the algorithm will iterate over the corpus 10 times (larger number -> slower but can help convergence).
@@ -187,26 +186,17 @@ def main():
             best_num_topics = K
         else: 
             print(f'Trained LDA with {K} topics. Average topic coherence (higher is better): {coherence_score} which is not very good.')
-        
-        if K == 10:
-            lda_model_k_10 = lda_model
 
     # -----------------------------------------------
     # 4. Show topics of the chosen model
     # -----------------------------------------------
     # Print top 5 most representative words per topic
-    print(f'These are the words most representative of each of the {best_num_topics} topics:')
-    for i, topic in best_lda_model.print_topics(num_words=5):
-        print(f"Topic {i}: {topic}")
-
-    print('For ex.4.1======================================')
-    print('These are the topics of the LDA model with K=10:')
-    for i, topic in lda_model_k_10.print_topics(num_words=5):
-        print(f"Topic {i}: {topic}")
-    print('================================================')
+    # print(f'These are the words most representative of each of the {best_num_topics} topics:')
+    # for i, topic in best_lda_model.print_topics(num_words=5):
+    #     print(f"Topic {i}: {topic}")
 
     # -----------------------------------------------
-    # 5. Count dominant topic per document
+    # 4. Count dominant topic per document
     # -----------------------------------------------
     # Count the dominant topic for each document
     topic_counts = [0] * best_num_topics  # one counter per topic
@@ -214,9 +204,29 @@ def main():
         topic_dist = best_lda_model.get_document_topics(bow)  # list of (topic_id, probability)
         dominant_topic = max(topic_dist, key=lambda x: x[1])[0]  # find the top probability
         topic_counts[dominant_topic] += 1  # add 1 to the most probable topic's counter
-    # Display the topic counts
-    for i, count in enumerate(topic_counts):
-        print(f"Topic {i}: {count} posts")
+    # print('111111', topic_counts)
+
+    # Get top 10 topics by post count
+    topic_count_pairs = [(i, count) for i, count in enumerate(topic_counts)]  # list of (topic_id, counts)
+    top_10_topics = sorted(topic_count_pairs, key=lambda x: x[1], reverse=True)[:10]
+    # print('2222222', top_10_topics)
+
+    # -----------------------------------------------
+    # 5. Show top 10 topics of the chosen model and their counts
+    # -----------------------------------------------
+    # Display the topic counts for top 10 topics only
+    print('\nTop 10 topics by number of posts:')
+    for i, count in top_10_topics:
+        print(f'Topic {i}: {count} posts')
+
+    # Print top 5 most representative words top 10 topics only
+    print(f'These are the words most representative of each of the top 10 popular topics:')
+    for i, _ in top_10_topics:
+        for j, topic in best_lda_model.print_topics(num_words=5):
+            if i == j:
+                print(f"Topic {i}: {topic}")
+            else: 
+                continue
 
     # -----------------------------------------------
     # 6. Sentiment Analysis by Topic
@@ -251,7 +261,7 @@ def main():
     # Add dominant topic to df
     topic_list = []  # list of dominant topics per post
     for bow in corpus:
-        topic_dist = lda_model_k_10.get_document_topics(bow)  # list of (topic_id, probability)
+        topic_dist = best_lda_model.get_document_topics(bow)  # list of (topic_id, probability)
         dominant_topic = max(topic_dist, key=lambda x: x[1])[0]  # find the top probability
         topic_list.append(dominant_topic)
     data['topic'] = topic_list
