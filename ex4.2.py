@@ -46,9 +46,9 @@ def main():
             print("SQLite Database connection successful")
         except Exception as e:
             print(f"Error: '{e}'")
-        posts_query = "SELECT id, content FROM Posts"
+        posts_query = "SELECT id, user_id, content FROM Posts"
         posts = pd.read_sql_query(posts_query, conn)
-        comments_query = "SELECT id, post_id, content FROM Comments"
+        comments_query = "SELECT id, user_id, post_id, content FROM Comments"
         comments = pd.read_sql_query(comments_query, conn)
         print("- Number of posts:", len(posts))
         print("- Number of comments:", len(comments))
@@ -57,11 +57,11 @@ def main():
     posts, comments = load_db()
 
     # 1.2. Cleaning data
-    # 1.2.1. Cleaning data 1 (Remove duplicates from spammers)
-    posts = posts.drop_duplicates(subset=["content"])
-    print("- Number of posts after removing duplicates:", len(posts))
-    comments = comments.drop_duplicates(subset=["content"])
-    print("- Number of comments after removing duplicates:", len(comments))
+    # 1.2.1. Cleaning data 1 (Remove duplicates from users/spammers)
+    posts = posts.drop_duplicates(subset=["user_id", "content"])
+    print("- Number of posts after removing duplicates from spammers:", len(posts))
+    comments = comments.drop_duplicates(subset=["user_id", "content"])
+    print("- Number of comments after removing duplicates from spammers:", len(comments))
 
     # 1.2.2. Clean data 2 (for each post/comment)
     def clean_text_light(text):
