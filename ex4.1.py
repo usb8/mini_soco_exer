@@ -221,12 +221,11 @@ def main():
 
     # Print top 5 most representative words top 10 topics only
     print(f'These are the words most representative of each of the top 10 popular topics:')
+    all_topics = best_lda_model.print_topics(num_topics=best_num_topics, num_words=5)  # get all topics, type: list of (topic_id, topic_words string)
+    # print('3333333', all_topics)
     for i, _ in top_10_topics:
-        for j, topic in best_lda_model.print_topics(num_words=5):
-            if i == j:
-                print(f"Topic {i}: {topic}")
-            else: 
-                continue
+        topic_words = all_topics[i][1] 
+        print(f"Topic {i}: {topic_words}")
 
     # -----------------------------------------------
     # 6. Sentiment Analysis by Topic
