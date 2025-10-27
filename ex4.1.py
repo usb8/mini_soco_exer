@@ -267,10 +267,23 @@ def main():
     data['topic'] = topic_list
     
     # Aggregate: count and mean sentiment score by topic
-    print("--- Sentiment Statistics by Topic ---")
-    topic_stats = data.groupby('topic')['sentiment_score'].agg(['count', 'mean'])
+    print("--- Sentiment Statistics by top 10 Topic in homework 4.1 (sort by mean) ---")
+    
+    # Filter for top 10 topics only
+    top_10_topic_ids = [i for i, _ in top_10_topics]
+    # data_top_10_topics = data.loc[data['topic'].isin(top_10_topic_ids)]
+    data_top_10_topics = data[data['topic'].isin(top_10_topic_ids)]
+
+    # Compute sentiment statistics for top 10 topics only
+    topic_stats = data_top_10_topics.groupby('topic')['sentiment_score'].agg(['count', 'mean'])
     sorted_topic_stats = topic_stats.sort_values(by='mean', ascending=False)  # sort by mean (highest first)
     print(sorted_topic_stats)
+
+    # # Aggregate: count and mean sentiment score by topic
+    # print("--- Sentiment Statistics by Topic ---")
+    # topic_stats = data.groupby('topic')['sentiment_score'].agg(['count', 'mean'])
+    # sorted_topic_stats = topic_stats.sort_values(by='mean', ascending=False)  # sort by mean (highest first)
+    # print(sorted_topic_stats)
 
 if __name__ == '__main__':
     main()
