@@ -264,16 +264,14 @@ def main():
         dominant_topic = max(topic_dist, key=lambda x: x[1])[0]  # find the top probability
         topic_list.append(dominant_topic)
     data['topic'] = topic_list
-    
-    # Aggregate: count and mean sentiment score by topic
-    print("--- Sentiment Statistics by top 10 Topic in homework 4.1 (sort by mean) ---")
-    
+
     # Filter for top 10 topics only
     top_10_topic_ids = [i for i, _ in top_10_topics]
     # data_top_10_topics = data.loc[data['topic'].isin(top_10_topic_ids)]
     data_top_10_topics = data[data['topic'].isin(top_10_topic_ids)]
-
-    # Compute sentiment statistics for top 10 topics only
+    
+    # Aggregate: count and mean sentiment score by topic
+    print("--- Sentiment Statistics by top 10 Topic in homework 4.1 (sort by mean) ---")
     topic_stats = data_top_10_topics.groupby('topic')['sentiment_score'].agg(['count', 'mean'])
     sorted_topic_stats = topic_stats.sort_values(by='mean', ascending=False)  # sort by mean (highest first)
     print(sorted_topic_stats)
